@@ -1,0 +1,94 @@
+# -----------------------------------------------------------------------------
+# Workflow Name: Go Backend CI (Build & Test)
+#
+# Description:
+# This workflow is the primary quality gate for the ShopAlly backend.
+# It automatically runs on every push and pull request to the 'main' branch
+# to ensure that all code compiles, passes tests, is correctly formatted,
+# and adheres to linting standards before it can be merged.
+# -----------------------------------------------------------------------------
+name: Go Backend CI
+
+# -----------------------------------------------------------------------------
+# Trigger Conditions: When to run this workflow
+# -----------------------------------------------------------------------------
+on:
+  # Run on every push to the 'main' branch to ensure it's always stable.
+  push:
+    branches:
+      - main
+  # Run on every pull request that targets the 'main' branch.
+  # This acts as a gatekeeper, preventing broken code from being merged.
+  pull_request:
+    branches:
+      - main
+
+# -----------------------------------------------------------------------------
+# Jobs: The tasks to be executed
+# -----------------------------------------------------------------------------
+jobs:
+  # We define a single job that performs all our verification steps.
+  verify-and-build:
+    # The type of virtual machine to run the job on. 'ubuntu-latest' is the standard.
+    runs-on: ubuntu-latest
+
+    # -------------------------------------------------------------------------
+    # Steps: A sequence of tasks for the job
+    # -------------------------------------------------------------------------
+    steps:
+      # --- Step 1: SETUP ---
+      - name: ✅ 1. Checkout Repository Code
+        uses: actions/checkout@v4
+        # This action downloads a copy of your repository's code onto the runner,
+        # so the subsequent steps have something to work on.
+
+      - name: ⚙️ 2. Set up Go Environment
+        uses: actions/setup-go@v5
+        with:
+          # Reads the Go version directly from your go.mod file, ensuring consistency.
+          go-version-file: 'go.mod'
+          # Optimizes build times by caching Go module dependencies.
+          cache: true
+
+      # --- Step 2: CODE QUALITY CHECKS ---
+      - name: 🧹 3. Run Linter (golangci-lint)
+        uses: golangci/golangci-lint-action@v3
+        with:
+          # This action runs a powerful linter to find common bugs, style issues,
+          # and code complexity problems, helping to maintain high code quality.
+          version: latest
+
+      - name: 🎨 4. Check Code Formatting (gofmt)
+        run: |
+          # This command checks if any .go files are not formatted according to Go's standards.
+          # If any file needs formatting, the script will print its name and exit with an error,
+          # failing the workflow and reminding the developer to format their code.
+          if [ -n "$(gofmt -l .)" ]; then
+            echo "Go code is not formatted:"
+            gofmt -l .
+            exit 1
+          fi
+
+      - name: 📦 5. Verify Go Modules
+        run: |
+          # This ensures that the go.mod and go.sum files are up-to-date and consistent
+          # with the source code's dependencies. It prevents "dirty" module files.
+          go mod tidy
+          if ! git diff --exit-code go.mod go.sum; then
+            echo "go.mod or go.sum is out of date after running 'go mod tidy'"
+            exit 1
+          fi
+
+      # --- Step 3: TESTING & BUILDING ---
+      - name: 🧪 6. Run Tests (with Race Detector)
+        run: go test -v -race ./...
+        # This is the most important step. It runs all unit and integration tests.
+        # -v (verbose): Shows the name of each test as it runs.
+        # -race (race detector): A powerful Go tool that finds concurrency bugs.
+        # ./...: A pattern that tells Go to run tests in all directories.
+
+      - name: 🏗️ 7. Build Application
+        run: go build -v ./...
+        # The final confirmation. This step compiles the entire application to ensure
+        # that there are no compilation errors. It's a safety net to catch any
+        # issues that tests or linters might have missed.

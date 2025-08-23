@@ -1,1 +1,0 @@
-# shopally-backend
