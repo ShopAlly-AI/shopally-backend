@@ -53,13 +53,21 @@ jobs:
             exit 1
           fi
 
+  
       - name: 📦 5. Verify Go Modules
         run: |
           go mod tidy
-          if ! git diff --exit-code go.mod go.sum; then
+
+          # Collect only existing files (go.mod is guaranteed, go.sum may not exist yet)
+          files_to_check=""
+          [ -f go.mod ] && files_to_check="$files_to_check go.mod"
+          [ -f go.sum ] && files_to_check="$files_to_check go.sum"
+
+          if ! git diff --exit-code -- $files_to_check; then
             echo "go.mod or go.sum is out of date after running 'go mod tidy'"
             exit 1
           fi
+
 
       # --- Step 3: TESTING & BUILDING ---
       - name: 🧪 6. Run Tests (with Race Detector)
