@@ -10,6 +10,7 @@ import (
 
 	"github.com/shopally-ai/internal/adapter/gateway"
 	apphandler "github.com/shopally-ai/internal/adapter/handler"
+	approuter "github.com/shopally-ai/internal/adapter/http/router"
 	"github.com/shopally-ai/internal/config"
 	"github.com/shopally-ai/internal/platform"
 	"github.com/shopally-ai/pkg/usecase"
@@ -61,14 +62,13 @@ func main() {
 	ttl := time.Duration(cfg.FX.CacheTTLSeconds) * time.Second
 	fx := gateway.NewCachedFXClient(fxHTTP, cache, ttl)
 
-	// Minimal /fx route using handler
-	mux := http.NewServeMux()
+	// Build router with handlers
 	fxHandler := apphandler.NewFXHandler(fx)
-	mux.HandleFunc("/fx", fxHandler.GetFX)
+	h := approuter.Build(approuter.Deps{FX: fxHandler}, approuter.Options{BasePath: ""})
 
 	addr := normalizeAddr(cfg.Server.Port)
 	log.Printf("listening on %s", addr)
-	if err := http.ListenAndServe(addr, mux); err != nil {
+	if err := http.ListenAndServe(addr, h); err != nil {
 		log.Fatal(err)
 	}
 }
