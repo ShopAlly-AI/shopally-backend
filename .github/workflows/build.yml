@@ -28,12 +28,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # --- Step 1: SETUP ---
       - name: ✅ 1. Checkout Repository Code
         uses: actions/checkout@v4
 
       - name: ⚙️ 2. Set up Go Environment
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v5.0.1
         with:
           go-version-file: 'go.mod'
           cache: true
@@ -43,7 +42,7 @@ jobs:
         uses: golangci/golangci-lint-action@v3
         with:
           version: latest
-          install-mode: goinstall   # ✅ ensures linter builds with Go 1.25
+          install-mode: goinstall
 
       - name: 🎨 4. Check Code Formatting (gofmt)
         run: |
@@ -68,8 +67,6 @@ jobs:
             exit 1
           fi
 
-
-      # --- Step 3: TESTING & BUILDING ---
       - name: 🧪 6. Run Tests (with Race Detector)
         run: go test -v -race ./...
 
