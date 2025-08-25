@@ -8,7 +8,7 @@ import (
 	"github.com/shopally-ai/pkg/usecase"
 )
 
-type RedisCache struct{
+type RedisCache struct {
 	client *redis.Client
 	prefix string
 }
@@ -23,7 +23,7 @@ func NewRedisCache(client *redis.Client, prefix string) *RedisCache {
 	}
 }
 
-func (c *RedisCache) key(k string) string{
+func (c *RedisCache) key(k string) string {
 	return c.prefix + k
 }
 
@@ -40,12 +40,12 @@ func (c *RedisCache) Get(ctx context.Context, key string) (string, bool, error) 
 	return val, true, nil
 }
 
-func (c *RedisCache) Set(ctx context.Context, key, val string, ttl time.Duration) (error) {
+func (c *RedisCache) Set(ctx context.Context, key, val string, ttl time.Duration) error {
 	if ttl < 0 {
 		ttl = 0
 	}
 	return c.client.Set(ctx, c.key(key), val, ttl).Err()
 }
 
-//Ensure interface compliance at compile time
+// Ensure interface compliance at compile time
 var _ usecase.ICachePort = (*RedisCache)(nil)

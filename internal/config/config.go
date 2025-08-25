@@ -21,12 +21,12 @@ type Config struct {
 		Password        string `mapstructure:"password"`
 		DB              int    `mapstructure:"db"`
 		ViewTrackingTTL int    `mapstructure:"view_tracking_ttl"`
-		KeyPrefix		string `mapstructure:"key_prefix"`
+		KeyPrefix       string `mapstructure:"key_prefix"`
 	} `mapstructure:"redis"`
 
 	FX struct {
-		APIURL			string `mapstructure:"api_url"`
-		APIKEY			string `mapstructure:"api_key"`
+		APIURL          string `mapstructure:"api_url"`
+		APIKEY          string `mapstructure:"api_key"`
 		CacheTTLSeconds int    `mapstructure:"cache_ttl_seconds"`
 	}
 

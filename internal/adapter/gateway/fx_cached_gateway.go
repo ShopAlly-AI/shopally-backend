@@ -10,22 +10,22 @@ import (
 )
 
 type CachedFXClient struct {
-	Inner usecase.IFXClient
-	Cache usecase.ICachePort
-	TTL time.Duration
+	Inner  usecase.IFXClient
+	Cache  usecase.ICachePort
+	TTL    time.Duration
 	Prefix string // optional key prefix, e.g., "fx:"
 }
 
 func NewCachedFXClient(inner usecase.IFXClient, cache usecase.ICachePort, ttl time.Duration) *CachedFXClient {
 	return &CachedFXClient{
-		Inner: inner,
-		Cache: cache,
-		TTL: ttl,
+		Inner:  inner,
+		Cache:  cache,
+		TTL:    ttl,
 		Prefix: "fx:",
 	}
 }
 
-func (c *CachedFXClient) key(from, to string) string{
+func (c *CachedFXClient) key(from, to string) string {
 	prefix := c.Prefix
 	if prefix == "" {
 		prefix = "fx:"
@@ -58,7 +58,7 @@ func (c *CachedFXClient) GetRate(ctx context.Context, from, to string) (float64,
 	}
 
 	// 3) Write-through
-	if c.Cache != nil{
+	if c.Cache != nil {
 		_ = c.Cache.Set(ctx, key, formatFloat(rate), c.TTL)
 	}
 
