@@ -6,6 +6,8 @@ import (
 	"log"
 	"time"
 
+	"github.com/gin-gonic/gin"
+	"github.com/shopally-ai/internal/adapter/handler"
 	"github.com/shopally-ai/internal/config"
 	"github.com/shopally-ai/internal/platform"
 )
@@ -44,5 +46,20 @@ func main() {
 		rdb = nil
 	} else {
 		log.Println("✅ Redis connected")
+	}
+
+	// Initialize router
+	router := gin.Default()
+
+	// Initialize handlers
+	searchHandler := handler.NewSearchHandler()
+
+	// Register routes
+	searchHandler.RegisterRoutes(router)
+
+	// Start the server
+	log.Println("Starting server on port", cfg.Server.Port)
+	if err := router.Run(":" + cfg.Server.Port); err != nil {
+		log.Fatalf("could not start server: %v", err)
 	}
 }
