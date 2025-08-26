@@ -1,3 +1,28 @@
+# -----------------------------------------------------------------------------
+# Workflow Name: Go Backend CI (Build & Test)
+#
+# Description:
+# This workflow is the primary quality gate for the ShopAlly backend.
+# It automatically runs on every push and pull request to the 'main' branch
+# to ensure that all code compiles, passes tests, is correctly formatted,
+# and adheres to linting standards before it can be merged.
+# -----------------------------------------------------------------------------
+name: Go Backend CI
+
+# -----------------------------------------------------------------------------
+# Trigger Conditions: When to run this workflow
+# -----------------------------------------------------------------------------
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+# -----------------------------------------------------------------------------
+# Jobs: The tasks to be executed
+# -----------------------------------------------------------------------------
 jobs:
   verify-and-build:
     runs-on: ubuntu-latest
