@@ -22,7 +22,7 @@ type LLMGateway interface {
 type CacheGateway interface {
 	Get(ctx context.Context, key string) (string, error)
 	Set(ctx context.Context, key string, value interface{}, expiration time.Duration) error
-)
+}
 
 type IFXClient interface {
 	GetRate(ctx context.Context, from, to string) (float64, error)
