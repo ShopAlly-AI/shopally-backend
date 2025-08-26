@@ -37,7 +37,23 @@ jobs:
           go-version-file: 'go.mod'
           cache: true
 
-      - name: 📦 3. Verify Go Modules
+      # --- Step 2: CODE QUALITY CHECKS ---
+      - name: 🧹 3. Run Linter (golangci-lint)
+        uses: golangci/golangci-lint-action@v3
+        with:
+          version: latest
+          install-mode: goinstall
+
+      - name: 🎨 4. Check Code Formatting (gofmt)
+        run: |
+          if [ -n "$(gofmt -l .)" ]; then
+            echo "Go code is not formatted:"
+            gofmt -l .
+            exit 1
+          fi
+
+  
+      - name: 📦 5. Verify Go Modules
         run: |
           go mod tidy
 
@@ -51,23 +67,8 @@ jobs:
             exit 1
           fi
 
-      # --- Step 4: CODE QUALITY CHECKS ---
-      - name: 🧹 4. Run Linter (golangci-lint)
-        uses: golangci/golangci-lint-action@v3
-        with:
-          version: latest
-          install-mode: goinstall
-
-      - name: 🎨 5. Check Code Formatting (gofmt)
-        run: |
-          if [ -n "$(gofmt -l .)" ]; then
-            echo "Go code is not formatted:"
-            gofmt -l .
-            exit 1
-          fi
-
       - name: 🧪 6. Run Tests (with Race Detector)
         run: go test -v -race ./...
 
-      - name: 🏗️ 7. Build Application
+      - name: 🏗 7. Build Application
         run: go build -v ./...
