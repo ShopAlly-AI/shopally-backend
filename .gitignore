@@ -13,3 +13,6 @@
 
 # Config files
 configs/
+
+#Environment files
+.env

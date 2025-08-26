@@ -4,12 +4,20 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net/http"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/shopally-ai/internal/adapter/handler"
+
+	"github.com/shopally-ai/internal/adapter/gateway"
+	apphandler "github.com/shopally-ai/internal/adapter/handler"
+	approuter "github.com/shopally-ai/internal/adapter/http/router"
+
 	"github.com/shopally-ai/internal/config"
 	"github.com/shopally-ai/internal/platform"
+	"github.com/shopally-ai/pkg/usecase"
 )
 
 func main() {
@@ -32,12 +40,11 @@ func main() {
 	db := client.Database(cfg.Mongo.Database)
 
 	fmt.Printf("Connected to MongoDB database: %s\n", db.Name())
-	fmt.Printf("Server running on port %s\n", cfg.Server.Port)
 
 	// Initialize Redis client
 	rdb := platform.NewRedisClient(cfg.Redis.Host, cfg.Redis.Port, cfg.Redis.Password, cfg.Redis.DB)
 
-	//Test Redis connection
+	// Test Redis connection
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -62,4 +69,41 @@ func main() {
 	if err := router.Run(":" + cfg.Server.Port); err != nil {
 		log.Fatalf("could not start server: %v", err)
 	}
+	// Compose cache (optional if Redis is available)
+	var cache usecase.ICachePort
+	if rdb != nil {
+		cache = gateway.NewRedisCache(rdb.Client, safePrefix(cfg.Redis.KeyPrefix))
+	}
+
+	// FX HTTP gateway and cached decorator
+	fxHTTP := gateway.NewFXHTTPGateway(cfg.FX.APIURL, cfg.FX.APIKEY, nil)
+	ttl := time.Duration(cfg.FX.CacheTTLSeconds) * time.Second
+	fx := gateway.NewCachedFXClient(fxHTTP, cache, ttl)
+
+	// Build router with handlers
+	fxHandler := apphandler.NewFXHandler(fx)
+	h := approuter.Build(approuter.Deps{FX: fxHandler}, approuter.Options{BasePath: ""})
+
+	addr := normalizeAddr(cfg.Server.Port)
+	log.Printf("listening on %s", addr)
+	if err := http.ListenAndServe(addr, h); err != nil {
+		log.Fatal(err)
+	}
+}
+
+func normalizeAddr(port string) string {
+	if port == "" {
+		return ":8080"
+	}
+	if strings.HasPrefix(port, ":") {
+		return port
+	}
+	return ":" + port
+}
+
+func safePrefix(p string) string {
+	if p == "" {
+		return "sa:"
+	}
+	return p
 }
