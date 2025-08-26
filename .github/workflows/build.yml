@@ -1,28 +1,3 @@
-# -----------------------------------------------------------------------------
-# Workflow Name: Go Backend CI (Build & Test)
-#
-# Description:
-# This workflow is the primary quality gate for the ShopAlly backend.
-# It automatically runs on every push and pull request to the 'main' branch
-# to ensure that all code compiles, passes tests, is correctly formatted,
-# and adheres to linting standards before it can be merged.
-# -----------------------------------------------------------------------------
-name: Go Backend CI
-
-# -----------------------------------------------------------------------------
-# Trigger Conditions: When to run this workflow
-# -----------------------------------------------------------------------------
-on:
-  push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
-
-# -----------------------------------------------------------------------------
-# Jobs: The tasks to be executed
-# -----------------------------------------------------------------------------
 jobs:
   verify-and-build:
     runs-on: ubuntu-latest
@@ -37,23 +12,8 @@ jobs:
           go-version-file: 'go.mod'
           cache: true
 
-      # --- Step 2: CODE QUALITY CHECKS ---
-      - name: 🧹 3. Run Linter (golangci-lint)
-        uses: golangci/golangci-lint-action@v3
-        with:
-          version: latest
-          install-mode: goinstall
-
-      - name: 🎨 4. Check Code Formatting (gofmt)
-        run: |
-          if [ -n "$(gofmt -l .)" ]; then
-            echo "Go code is not formatted:"
-            gofmt -l .
-            exit 1
-          fi
-
-  
-      - name: 📦 5. Verify Go Modules
+      # --- Step 3: VERIFY MODULES FIRST ---
+      - name: 📦 3. Verify Go Modules
         run: |
           go mod tidy
 
@@ -64,6 +24,21 @@ jobs:
 
           if ! git diff --exit-code -- $files_to_check; then
             echo "go.mod or go.sum is out of date after running 'go mod tidy'"
+            exit 1
+          fi
+
+      # --- Step 4: CODE QUALITY CHECKS ---
+      - name: 🧹 4. Run Linter (golangci-lint)
+        uses: golangci/golangci-lint-action@v3
+        with:
+          version: latest
+          install-mode: goinstall
+
+      - name: 🎨 5. Check Code Formatting (gofmt)
+        run: |
+          if [ -n "$(gofmt -l .)" ]; then
+            echo "Go code is not formatted:"
+            gofmt -l .
             exit 1
           fi
 
