@@ -16,7 +16,7 @@ func NewMockLLMGateway() usecase.LLMGateway {
 func (m *MockLLMGateway) ParseIntent(ctx context.Context, query string) (map[string]interface{}, error) {
 	// Very simple mocked intent
 	return map[string]interface{}{
-		"category":       "smartphone",
+		"category":      "smartphone",
 		"price_max_ETB": 5000,
 	}, nil
 }
