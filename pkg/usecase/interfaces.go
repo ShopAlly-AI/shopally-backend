@@ -34,3 +34,9 @@ type ICachePort interface {
 	// Set stores the value with a TTL; use 0 for no expiration.
 	Set(ctx context.Context, key, val string, ttl time.Duration) error
 }
+
+type AlertRepository interface {
+	CreateAlert(alert *domain.Alert) error
+	GetAlert(alertID string) (*domain.Alert, error)
+	DeleteAlert(alertID string) error
+}
