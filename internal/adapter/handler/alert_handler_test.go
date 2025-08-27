@@ -7,8 +7,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/shopally-ai/pkg/usecase"
 	"github.com/shopally-ai/internal/adapter/repository"
+	"github.com/shopally-ai/pkg/usecase"
 )
 
 func TestAlertHandlers(t *testing.T) {
@@ -20,24 +20,24 @@ func TestAlertHandlers(t *testing.T) {
 
 	t.Run("CreateAlertHandler", func(t *testing.T) {
 		payload := []byte(`{"userId": "user-123", "productId": "prod-abc", "targetPrice": 500.00}`)
-		
+
 		req := httptest.NewRequest("POST", "/alerts", bytes.NewBuffer(payload))
 		req.Header.Set("Content-Type", "application/json")
-		
+
 		rr := httptest.NewRecorder()
-		
+
 		alertHandler.CreateAlertHandler(rr, req)
-		
+
 		if status := rr.Code; status != http.StatusCreated {
 			t.Errorf("handler returned wrong status code: got %v want %v",
 				status, http.StatusCreated)
 		}
-		
+
 		var res successResponse
 		if err := json.NewDecoder(rr.Body).Decode(&res); err != nil {
 			t.Fatalf("could not decode response body: %v", err)
 		}
-		
+
 		dataMap, ok := res.Data.(map[string]interface{})
 		if !ok {
 			t.Fatalf("response data is not a map: got %T", res.Data)
@@ -66,7 +66,7 @@ func TestAlertHandlers(t *testing.T) {
 
 		req := httptest.NewRequest("GET", "/alerts/"+alertID, nil)
 		rr := httptest.NewRecorder()
-		
+
 		alertHandler.GetAlertHandler(rr, req)
 
 		if status := rr.Code; status != http.StatusOK {
@@ -90,7 +90,7 @@ func TestAlertHandlers(t *testing.T) {
 
 		req := httptest.NewRequest("DELETE", "/alerts/"+alertID, nil)
 		rr := httptest.NewRecorder()
-		
+
 		alertHandler.DeleteAlertHandler(rr, req)
 
 		if status := rr.Code; status != http.StatusOK {
@@ -110,17 +110,17 @@ func TestAlertHandlers(t *testing.T) {
 			t.Errorf("unexpected status message: got %v", status)
 		}
 	})
-	
+
 	t.Run("GetDeletedAlertFails", func(t *testing.T) {
 		if alertID == "" {
 			t.Fatal("alertID was not set in previous test")
 		}
-		
+
 		req := httptest.NewRequest("GET", "/alerts/"+alertID, nil)
 		rr := httptest.NewRecorder()
-		
+
 		alertHandler.GetAlertHandler(rr, req)
-		
+
 		if status := rr.Code; status != http.StatusNotFound {
 			t.Errorf("handler returned wrong status code: got %v want %v", status, http.StatusNotFound)
 		}

@@ -8,7 +8,7 @@ import (
 )
 
 type mockAlertRepository struct {
-	alerts sync.Map 
+	alerts sync.Map
 }
 
 func newMockAlertRepository() *mockAlertRepository {

@@ -1,11 +1,12 @@
 package repository
+
 import (
 	"fmt"
 	"sync"
 
 	"github.com/shopally-ai/pkg/domain"
 
-	"github.com/google/uuid"	
+	"github.com/google/uuid"
 )
 
 type MockAlertRepository struct {
