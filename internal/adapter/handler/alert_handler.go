@@ -9,7 +9,6 @@ import (
 
 	"github.com/shopally-ai/pkg/domain"
 	"github.com/shopally-ai/pkg/usecase"
-
 )
 
 // AlertHandler handles HTTP requests for alert operations.
@@ -72,7 +71,9 @@ func (h *AlertHandler) CreateAlertHandler(w http.ResponseWriter, r *http.Request
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated) // 201 Created
-	json.NewEncoder(w).Encode(response)
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+	}
 }
 
 // GetAlertHandler handles GET requests to retrieve an alert by its ID.
@@ -102,7 +103,9 @@ func (h *AlertHandler) GetAlertHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK) // 200 OK
-	json.NewEncoder(w).Encode(response)
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+	}
 }
 
 // DeleteAlertHandler handles DELETE requests to remove an alert by its ID.
@@ -133,5 +136,7 @@ func (h *AlertHandler) DeleteAlertHandler(w http.ResponseWriter, r *http.Request
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK) // 200 OK
-	json.NewEncoder(w).Encode(response)
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+	}
 }
