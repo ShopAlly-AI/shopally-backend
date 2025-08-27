@@ -70,5 +70,5 @@ jobs:
       - name: 🧪 6. Run Tests (with Race Detector)
         run: go test -v -race ./...
 
-      - name: 🏗️ 7. Build Application
+      - name: 🏗 7. Build Application
         run: go build -v ./...
