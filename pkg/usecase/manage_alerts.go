@@ -1,4 +1,5 @@
 package usecase
+
 import "github.com/shopally-ai/pkg/domain"
 
 type AlertManager struct {
