@@ -4,16 +4,12 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"net/http"
-	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/shopally-ai/internal/adapter/handler"
 
 	"github.com/shopally-ai/internal/adapter/gateway"
-	apphandler "github.com/shopally-ai/internal/adapter/handler"
-	approuter "github.com/shopally-ai/internal/adapter/http/router"
 
 	"github.com/shopally-ai/internal/config"
 	"github.com/shopally-ai/internal/platform"
@@ -58,8 +54,13 @@ func main() {
 	// Initialize router
 	router := gin.Default()
 
+	// Construct mock gateways and use case for mocked search flow
+	ag := gateway.NewMockAlibabaGateway()
+	lg := gateway.NewMockLLMGateway()
+	uc := usecase.NewSearchProductsUseCase(ag, lg, nil)
+
 	// Initialize handlers
-	searchHandler := handler.NewSearchHandler()
+	searchHandler := handler.NewSearchHandler(uc)
 
 	// Register routes
 	searchHandler.RegisterRoutes(router)
@@ -69,41 +70,4 @@ func main() {
 	if err := router.Run(":" + cfg.Server.Port); err != nil {
 		log.Fatalf("could not start server: %v", err)
 	}
-	// Compose cache (optional if Redis is available)
-	var cache usecase.ICachePort
-	if rdb != nil {
-		cache = gateway.NewRedisCache(rdb.Client, safePrefix(cfg.Redis.KeyPrefix))
-	}
-
-	// FX HTTP gateway and cached decorator
-	fxHTTP := gateway.NewFXHTTPGateway(cfg.FX.APIURL, cfg.FX.APIKEY, nil)
-	ttl := time.Duration(cfg.FX.CacheTTLSeconds) * time.Second
-	fx := gateway.NewCachedFXClient(fxHTTP, cache, ttl)
-
-	// Build router with handlers
-	fxHandler := apphandler.NewFXHandler(fx)
-	h := approuter.Build(approuter.Deps{FX: fxHandler}, approuter.Options{BasePath: ""})
-
-	addr := normalizeAddr(cfg.Server.Port)
-	log.Printf("listening on %s", addr)
-	if err := http.ListenAndServe(addr, h); err != nil {
-		log.Fatal(err)
-	}
-}
-
-func normalizeAddr(port string) string {
-	if port == "" {
-		return ":8080"
-	}
-	if strings.HasPrefix(port, ":") {
-		return port
-	}
-	return ":" + port
-}
-
-func safePrefix(p string) string {
-	if p == "" {
-		return "sa:"
-	}
-	return p
 }
